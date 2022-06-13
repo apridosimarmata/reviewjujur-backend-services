@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+message Fingerprint {
+    string androidId = 1;
+    int32 externalStorageCapacity = 2;
+    string inputMethods = 3;
+    string kernelName = 4;
+    string locationProviders = 5;
+    int32 isPasswordShown = 6;
+    string ringtone = 7;
+    string availableRingtone = 8;
+    int32 screenTimeout = 9;
+    string wallpaper = 10;
+    int32 wifiPolicy = 11;
+}
+
+service FingerprintService {
+    rpc InsertNewFingerprint(Fingerprint) returns (Empty) {};
+}
+
+message Empty {}
