@@ -1,7 +1,9 @@
 from cassandra.cluster import Cluster
 from cassandra.query import dict_factory
 
-from functions import *
+from .functions import *
+
+import math
 
 cluster = Cluster(['172.17.0.3'])
 session = cluster.connect('fingerprint')
@@ -15,69 +17,89 @@ for value in phone_ids:
 
 phone_fingerprints = {}
 
-fingerprints = session.execute('SELECT * FROM fingerprints')
+def predict(unknown_fingerprint):
+    fingerprints = session.execute('SELECT * FROM fingerprints')
+    phone_fingerprints = {}
+    for fingerprint in fingerprints:
+        try:
+            phone_fingerprints[fingerprint.get('phone_id')].append(fingerprint)
+        except:
+            phone_fingerprints[fingerprint.get('phone_id')] = [fingerprint]
 
-for fingerprint in fingerprints:
-    try:
-        phone_fingerprints[fingerprint.get('phone_id')].append(fingerprint)
-    except:
-        phone_fingerprints[fingerprint.get('phone_id')] = [fingerprint]
+    max_similarity = 0
+    phone_identified = None
+    probs = None
+    for phone in phone_fingerprints.keys():
+        probabilities = []
+        # List type
 
+        # Available ringtones [1]
+        probabilities.append(jaccard_index(set(unknown_fingerprint.available_ringtones.split(',')), set(phone_fingerprints[phone][-1].get('available_ringtones').split(','))))
 
-unknown_fingerprint = {'available_ringtones': 'AcousticGuitar,Andromeda,Aquila,ArgoNavis,Atria,Backroad,BeatPlucker,BellPhone,BentleyDubs,BigEasy,BirdLoop,Blues,Bollywood,Boötes,Breeze,BusaMove,Cairo,CalypsoSteel,Candy,CanisMajor,CaribbeanIce,Carina,Carousel,Cassiopeia,Celesta,Centaurus,ChampagneEdition,Childhood,ChimeyPhone,ClubCubano,Country,Cowboy,CrayonRock,CrazyDream,CurveBallBlend,Cygnus,DancinFool,DigitalPhone,Ding,DonMessWivIt,Draco,DreamTheme,EasternSky,Echo,EntertheNexus,Eridani,EtherShake,Fairyland,Fantasy,FieldTrip,FluteyPhone,FreeFlight,FriendlyGhost,FunkYall,GameOverGuitar,GimmeMoTown,Girtab,GlacialGroove,Glee,Glockenspiel,Growl,HalfwayHome,Hydra,IceLatte,InsertCoin,Kuma,Kungfu,Lollipop,LoopyLounge,LoveFlute,Lyra,Machina,MedievalJaunt,Mi,MiHouse,MiJazz,MildlyAlarming,MiMix2,MiRemix,MountainSpring,Nairobi,Nassau,NewPlayer,NoLimits,NoiseyOne,Orange,OrganDub,Orion,ParadiseIsland,Pegasus,Perseus,Playa,Pyxis,Raindrops,Rasalas,Revelation,Rigel,RoadTrip,RomancingTheTone,Safari,Savannah,Scarabaeus,Sceptrum,Seville,ShesAllThat,SilkyWay,SitarVersusSitar,Solarium,SpaceAge,SpringyJalopy,SteppinOut,Sunrise,Terminated,TerribleTwos,Testudo,Themos,ThirdEye,ThrillerThree,Thunderfoot,ToyRobot,TwirlAway,UrsaMinor,VeryAlarmed,Vespa,Vigor,World,Zeta', 'external_storage_capacity': '299892736', 'input_methods': 'com.baidu.simeji.SimejiIME,com.android.inputmethod.latin.LatinIME,com.google.android.voicesearch.ime.VoiceInputMethodService', 'is_password_shown': '1', 'kernel_name': '[Linux localhost 4.14.190-perf-gd847327c934e-dirty #2 SMP PREEMPT Mon Dec 20 20:59:57 WIB 2021 aarch64]', 'location_providers': 'false,false', 'phone_id': 'f7c34872d87a3afd', 'ringtone': 'Tidak Ada', 'screen_timeout': '2147483647', 'wallpaper': 'd41d8cd98f00b204e9800998ecf8427e', 'wifi_policy': '2'}
+        # String type
 
-max_ringtone_similarity = 0
+        # Wallpaper [2]
+        if unknown_fingerprint.wallpaper == phone_fingerprints[phone][-1].get('wallpaper'):
+            probabilities.append(number_string_extract_probabilities('wallpaper', phone_fingerprints[phone]).get('unchanged_probability_in_phone'))
+        else:
+            probabilities.append(number_string_extract_probabilities('wallpaper', phone_fingerprints[phone]).get('changed_probability_in_phone'))
+        
+        # Kernel [3]
+        if unknown_fingerprint.kernel_name == phone_fingerprints[phone][-1].get('kernel_name'):
+            probabilities.append(number_string_extract_probabilities('kernel_name', phone_fingerprints[phone]).get('unchanged_probability_in_phone'))
+        else:
+            probabilities.append(number_string_extract_probabilities('kernel_name', phone_fingerprints[phone]).get('changed_probability_in_phone'))
+        
+        # Input methods [4]
+        if unknown_fingerprint.input_methods == phone_fingerprints[phone][-1].get('input_methods'):
+            probabilities.append(number_string_extract_probabilities('input_methods', phone_fingerprints[phone]).get('unchanged_probability_in_phone'))
+        else:
+            probabilities.append(number_string_extract_probabilities('input_methods', phone_fingerprints[phone]).get('changed_probability_in_phone'))
+        
+        # Ringtone [5]
+        if unknown_fingerprint.ringtone == phone_fingerprints[phone][-1].get('ringtone'):
+            probabilities.append(number_string_extract_probabilities('ringtone', phone_fingerprints[phone]).get('unchanged_probability_in_phone'))
+        else:
+            probabilities.append(number_string_extract_probabilities('ringtone', phone_fingerprints[phone]).get('changed_probability_in_phone'))
+        
+        # Number / Int
 
-max_similarity = 0
+        # Screen time out [6]
+        if str(unknown_fingerprint.screen_timeout) == phone_fingerprints[phone][-1].get('screen_timeout'):
+            probabilities.append(number_string_extract_probabilities('external_storage_capacity', phone_fingerprints[phone]).get('unchanged_probability_in_phone'))
+        else:
+            probabilities.append(number_string_extract_probabilities('external_storage_capacity', phone_fingerprints[phone]).get('changed_probability_in_phone'))
+        
+        # External storage [7]
+        if str(unknown_fingerprint.external_storage_capacity) == phone_fingerprints[phone][-1].get('external_storage_capacity'):
+            probabilities.append(number_string_extract_probabilities('external_storage_capacity', phone_fingerprints[phone]).get('unchanged_probability_in_phone'))
+        else:
+            probabilities.append(number_string_extract_probabilities('external_storage_capacity', phone_fingerprints[phone]).get('changed_probability_in_phone'))
+        
+        # Enumerate data type
 
-for phone in phone_fingerprints.keys():
-    # List type
+        # Is Password Shown [8]
+        probabilities.append(enumerate_probability('is_password_shown', phone_fingerprints[phone], str(unknown_fingerprint.is_password_shown)))
+        
+        # Location Providers [9]
+        probabilities.append(enumerate_probability('location_providers', phone_fingerprints[phone], unknown_fingerprint.location_providers))
 
-    # Available ringtones
-    ringtone_similarity = jaccard_index(set(unknown_fingerprint.get('available_ringtones').split(',')), set(phone_fingerprints[phone][-1].get('available_ringtones').split(',')))
-    if ringtone_similarity > max_ringtone_similarity:
-        max_ringtone_similarity = ringtone_similarity
-        #print(f'[AVAILABLE RINGTONES] It seems that this phone is {phone} with probability {max_ringtone_similarity}')
-    
+        # Wifi Policy
+        probabilities.append(enumerate_probability('wifi_policy', phone_fingerprints[phone], str(unknown_fingerprint.wifi_policy)))
 
-    # String type
+        similarity = math.fsum(probabilities) / len(probabilities)
+        if similarity > .6:
+            #print(f"{probabilities} -> {similarity}")
+            pass
 
-    # Wallpaper
-    if unknown_fingerprint.get('wallpaper') == phone_fingerprints[phone][-1].get('wallpaper'):
-        #print(f'[WALLPAPER] It seems that this phone is {phone}')
-        pass
-    
-    # Kernel
-    if unknown_fingerprint.get('kernel_name') == phone_fingerprints[phone][-1].get('kernel_name'):
-        #print(f'[KERNEL NAME] It seems that this phone is {phone}')
-        pass
-    
-    # External storage
-    ext
-    if unknown_fingerprint.get('external_storage_capacity') != phone_fingerprints[phone][-1].get('external_storage_capacity'):
-        #print(f'[EXTERNAL STORAGE CAPACITY] It seems that this phone is {phone}')
-        number_string_extract_probabilities(phone, 'external_storage_capacity', phone_fingerprints).get('phone_probability')
-    else:
-        number_string_extract_probabilities(phone, 'external_storage_capacity', phone_fingerprints).get('phone_probability')
-    
-    # Input methods
-    if unknown_fingerprint.get('input_methods') == phone_fingerprints[phone][-1].get('input_methods'):
-        #print(f'[INPUT METHODS] It seems that this phone is {phone}')
-        pass
-    
-    # Ringtone
-    if unknown_fingerprint.get('ringtone') == phone_fingerprints[phone][-1].get('ringtone'):
-        pass
-        #print(f'[RINGTONE] It seems that this phone is {phone}')
-    
-    # Number / Int
+        if phone == '4714e6b76c4138b4':
+            print(probabilities)
 
-    # Screen time out
-    if unknown_fingerprint.get('screen_timeout') == phone_fingerprints[phone][-1].get('screen_timeout'):
-        #print(f'[SCREEN TIMEOUT] It seems that this phone is {phone}')
-        pass
-    
+        if max_similarity < similarity and .8 < similarity:
+            max_similarity = similarity
+            phone_identified = phone
+            probs = probabilities
 
-print(max_external_storage)
-
-    
+    print(f"identified as {phone_identified} == {unknown_fingerprint.phone_id} with similarity {max_similarity} -> {probs}")
+    if phone_identified == unknown_fingerprint.phone_id:
+        print("correct!")

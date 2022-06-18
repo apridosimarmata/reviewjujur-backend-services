@@ -10,7 +10,7 @@ column_names = [
     'screen_timeout',
     'wallpaper',
     'wifi_policy'
-    ]
+]
 
 def jaccard_index(set1, set2):
     intersection = set1 & set2
@@ -18,20 +18,27 @@ def jaccard_index(set1, set2):
     jaccard_index = max(len(intersection), 1) / max(len(union), 1)
     return jaccard_index
 
-def number_string_extract_probabilities(phone_id, column_name, phone_fingerprints):
-    events = 0
-    changed_event = 0
+def number_string_extract_probabilities(column_name, phone_fingerprints):
+    phone_events = len(phone_fingerprints) - 1
+    changed_event_in_phone = 0
     
-    for phone in phone_fingerprints.keys():
-        events += len(phone_fingerprints[phone]) - 1
-        for index, fingerprint in enumerate(phone_fingerprints[phone]):
-            if index > 0 and fingerprint.get(column_name) != phone_fingerprints[phone][index - 1].get(column_name):
-                changed_event += 1
+    for index, fingerprint in enumerate(phone_fingerprints):
+        if index > 0 and fingerprint.get(column_name) != phone_fingerprints[index - 1].get(column_name):
+                changed_event_in_phone += 1
+    
+    changed_probability_in_phone = 1
 
-    fingerprints_list = [fingerprint for each_phone_fingerprints in phone_fingerprints.values() for fingerprint in each_phone_fingerprints]
-    probability_of_phone = len(phone_fingerprints[phone_id]) / len(fingerprints_list)
-    return {
-        'changed_probability' : changed_event/events,
-        'unchanged_probability' : events-changed_event/events,
-        'phone_probability' : probability_of_phone,
-        'phone_probability_if_changed' : 0}
+    if phone_events > 0:
+        changed_probability_in_phone = changed_event_in_phone / phone_events
+
+    return {'changed_probability_in_phone' : changed_probability_in_phone, 'unchanged_probability_in_phone' : 1 - changed_probability_in_phone}
+
+def enumerate_probability(column_name, phone_fingerprints, value):
+    count = 0
+    for fingerprint in phone_fingerprints:
+        if fingerprint.get(column_name) == value:
+            count += 1
+    
+    count += 1
+
+    return count / (len(phone_fingerprints) + 1)

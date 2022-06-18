@@ -1,13 +1,11 @@
-from flask import Blueprint, jsonify, request, make_response
-import requests, os, http
-from utils import auth as authutils
+from flask import Blueprint, request, make_response
+import http
 from utils.request import *
 from auth import authentication, authorization
 
 prefix = 'auth'
 
 auth = Blueprint(prefix, __name__)
-
 
 @auth.route('/authentication/email', methods = ['POST'])
 def authenticate_by_email():
@@ -19,7 +17,7 @@ def authenticate_by_phone():
 
 @auth.route('/authentication/phone/<whatsapp_no>', methods = ['GET'])
 def request_phone_authentication(whatsapp_no):
-    return authentication.request_code(request)
+    return authentication.request_code(whatsapp_no)
 
 from utils.auth import access_token_required
 

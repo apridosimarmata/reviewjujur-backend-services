@@ -33,5 +33,5 @@ def by_phone(request):
         })
     return result
 
-def request_code(request):
-    return req.get_data(user_url + '/verification/code/' + request.view_args['whatsapp_no'])
+def request_code(whatsapp_no):
+    return req.get_data(user_url + '/verification/code/' + whatsapp_no)

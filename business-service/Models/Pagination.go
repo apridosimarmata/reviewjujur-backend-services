@@ -4,13 +4,13 @@ type BusinessPagination struct {
 	Limit           int         `json:"limit,omitempty;query:limit"`
 	Page            int         `json:"page,omitempty;query:page"`
 	Sort            string      `json:"sort,omitempty;query:sort"`
-	LocationUid     string      `json:"location_uid"`
+	LocationUid     string      `json:"locationUid"`
 	Location        string      `json:"location"`
 	Province        string      `json:"province"`
-	BusinessName    string      `json:"business_name,omitempty"`
-	BusinessAddress string      `json:"business_address,omitempty"`
-	TotalRows       int64       `json:"total_rows"`
-	TotalPages      int         `json:"total_pages"`
+	BusinessName    string      `json:"businessName,omitempty"`
+	BusinessAddress string      `json:"businessAddress,omitempty"`
+	TotalRows       int64       `json:"totalRows"`
+	TotalPages      int         `json:"totalPages"`
 	Rows            interface{} `json:"rows"`
 }
 

@@ -21,6 +21,8 @@ def refresh_token(refresh_token):
         return make_response(HTTPStatus.NOT_ACCEPTABLE, 'Not Acceptable', None)
     elif isinstance(user, dict):
         return make_response(HTTPStatus.CREATED, None, AuthenticationResponse(user))
+    else:
+        print('ok')
 
 def create_authorization_response(code):
     if code == EXPIRED_TOKEN:

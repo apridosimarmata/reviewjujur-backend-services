@@ -6,8 +6,8 @@ from utils.constants import *
 secret_key = "AMNTAPAP"
 @dataclass
 class AuthenticationResponse:
-    token : str
-    refresh_token : str
+    token: str
+    refreshToken: str
 
     def __init__(self, user):
         self.token = jwt.encode({
@@ -19,7 +19,7 @@ class AuthenticationResponse:
             secret_key,
             algorithm = "HS256"
         )
-        self.refresh_token = jwt.encode({
+        self.refreshToken = jwt.encode({
             'uuid' : user.get('uuid'),
             'email' : user.get('email'),
             'whatsappNo' : user.get('whatsappNo'),
@@ -41,3 +41,5 @@ class AuthenticationResponse:
                 return EXPIRED_TOKEN
             elif isinstance(e, jwt.InvalidSignatureError):
                 return SIGNATURE_ERROR
+            else:
+                print(e)
