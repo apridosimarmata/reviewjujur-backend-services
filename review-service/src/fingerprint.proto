@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 message Fingerprint {
-    string phone_id = 1;
+    string review_uid = 1;
     int32 external_storage_capacity = 2;
     string input_methods = 3;
     string kernel_name = 4;
@@ -15,7 +15,7 @@ message Fingerprint {
 }
 
 service FingerprintService {
-    rpc InsertNewFingerprint(Fingerprint) returns (Empty) {};
+    rpc Predict(Fingerprint) returns (Empty) {};
 }
 
 message Empty {}

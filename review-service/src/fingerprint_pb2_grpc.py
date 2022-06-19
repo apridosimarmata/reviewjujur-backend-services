@@ -14,8 +14,8 @@ class FingerprintServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.InsertNewFingerprint = channel.unary_unary(
-                '/FingerprintService/InsertNewFingerprint',
+        self.Predict = channel.unary_unary(
+                '/FingerprintService/Predict',
                 request_serializer=src_dot_fingerprint__pb2.Fingerprint.SerializeToString,
                 response_deserializer=src_dot_fingerprint__pb2.Empty.FromString,
                 )
@@ -24,7 +24,7 @@ class FingerprintServiceStub(object):
 class FingerprintServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def InsertNewFingerprint(self, request, context):
+    def Predict(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -33,8 +33,8 @@ class FingerprintServiceServicer(object):
 
 def add_FingerprintServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'InsertNewFingerprint': grpc.unary_unary_rpc_method_handler(
-                    servicer.InsertNewFingerprint,
+            'Predict': grpc.unary_unary_rpc_method_handler(
+                    servicer.Predict,
                     request_deserializer=src_dot_fingerprint__pb2.Fingerprint.FromString,
                     response_serializer=src_dot_fingerprint__pb2.Empty.SerializeToString,
             ),
@@ -49,7 +49,7 @@ class FingerprintService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def InsertNewFingerprint(request,
+    def Predict(request,
             target,
             options=(),
             channel_credentials=None,
@@ -59,7 +59,7 @@ class FingerprintService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/FingerprintService/InsertNewFingerprint',
+        return grpc.experimental.unary_unary(request, target, '/FingerprintService/Predict',
             src_dot_fingerprint__pb2.Fingerprint.SerializeToString,
             src_dot_fingerprint__pb2.Empty.FromString,
             options, channel_credentials,

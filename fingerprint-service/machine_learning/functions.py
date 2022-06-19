@@ -1,3 +1,14 @@
+from pydoc import cli
+import uuid
+from cassandra.cluster import Cluster
+from cassandra.query import dict_factory
+
+from utils import *
+
+cluster = Cluster(['172.17.0.3'])
+session = cluster.connect('fingerprint')
+session.row_factory = dict_factory
+
 column_names = [
     'phone_id',
     'available_ringtones',
@@ -42,3 +53,43 @@ def enumerate_probability(column_name, phone_fingerprints, value):
     count += 1
 
     return count / (len(phone_fingerprints) + 1)
+
+def save_new_fingerprint(unknown_fingerprint):
+    new_phone_id = str(uuid.uuid4())
+    statement = session.prepare(
+    'INSERT INTO fingerprints(uid, available_ringtones , external_storage_capacity, input_methods, is_password_shown , kernel_name, location_providers, phone_id, ringtone, screen_timeout , wallpaper, wifi_policy, created_at) '
+    'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    args = [
+        new_phone_id,
+        unknown_fingerprint.available_ringtones,
+        str(abs(unknown_fingerprint.external_storage_capacity)),
+        unknown_fingerprint.input_methods,
+        str(unknown_fingerprint.is_password_shown),
+        unknown_fingerprint.kernel_name,
+        unknown_fingerprint.location_providers,
+        str(uuid.uuid4()),
+        unknown_fingerprint.ringtone,
+        str(unknown_fingerprint.screen_timeout),
+        unknown_fingerprint.wallpaper,
+        str(unknown_fingerprint.wifi_policy),
+        now()
+    ]
+
+    session.execute(statement, args)
+
+    return new_phone_id
+
+from src import review_pb2_grpc, review_pb2
+import grpc
+from config import config
+
+channel = grpc.insecure_channel(f"localhost:{config.get('REVIEW_PORT_GRPC')}", options=(('grpc.enable_http_proxy', 0),))
+
+def send_fingerprint_callback(review_uid, phone_id):
+    client = review_pb2_grpc.ReviewServiceStub(channel)
+    client.FingerprintCallback(
+        review_pb2.FingerprintCallbackRequest(
+                review_uid = review_uid,
+                phone_id = phone_id
+            )
+        )

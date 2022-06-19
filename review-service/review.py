@@ -1,6 +1,6 @@
 import http
 from cassandra.cluster import Cluster
-from cassandra.query import dict_factory, tuple_factory
+from cassandra.query import tuple_factory
 import uuid
 from utils import now
 from models import ResponseModel
@@ -11,13 +11,14 @@ session.row_factory = tuple_factory
 
 def create(review):
     review_uid = str(uuid.uuid4())
+    now_timestamp = now()
 
     # Creating the actual review
     statement = session.prepare('INSERT INTO reviews(uid, business_uid, user_uid, text, score, status, status_updated_at, created_at) '
     'VALUES(?, ?, ?, ?, ?, ?, ?, ?)')
 
     try:
-        session.execute(statement, [review_uid, review.business_uid, review.user_uid, review.text, review.score, 1, now(), now()])
+        session.execute(statement, [review_uid, review.business_uid, review.user_uid, review.text, review.score, 1, now_timestamp, now_timestamp])
     except Exception as e:
         return ResponseModel(f'{e}', http.HTTPStatus.INTERNAL_SERVER_ERROR, None)
     

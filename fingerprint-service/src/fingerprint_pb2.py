@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15src/fingerprint.proto\"\x94\x02\n\x0b\x46ingerprint\x12\x10\n\x08phone_id\x18\x01 \x01(\t\x12!\n\x19\x65xternal_storage_capacity\x18\x02 \x01(\x05\x12\x15\n\rinput_methods\x18\x03 \x01(\t\x12\x13\n\x0bkernel_name\x18\x04 \x01(\t\x12\x1a\n\x12location_providers\x18\x05 \x01(\t\x12\x19\n\x11is_password_shown\x18\x06 \x01(\x05\x12\x10\n\x08ringtone\x18\x07 \x01(\t\x12\x1b\n\x13\x61vailable_ringtones\x18\x08 \x01(\t\x12\x16\n\x0escreen_timeout\x18\t \x01(\x05\x12\x11\n\twallpaper\x18\n \x01(\t\x12\x13\n\x0bwifi_policy\x18\x0b \x01(\x05\"\x07\n\x05\x45mpty2D\n\x12\x46ingerprintService\x12.\n\x14InsertNewFingerprint\x12\x0c.Fingerprint\x1a\x06.Empty\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15src/fingerprint.proto\"\x96\x02\n\x0b\x46ingerprint\x12\x12\n\nreview_uid\x18\x01 \x01(\t\x12!\n\x19\x65xternal_storage_capacity\x18\x02 \x01(\x05\x12\x15\n\rinput_methods\x18\x03 \x01(\t\x12\x13\n\x0bkernel_name\x18\x04 \x01(\t\x12\x1a\n\x12location_providers\x18\x05 \x01(\t\x12\x19\n\x11is_password_shown\x18\x06 \x01(\x05\x12\x10\n\x08ringtone\x18\x07 \x01(\t\x12\x1b\n\x13\x61vailable_ringtones\x18\x08 \x01(\t\x12\x16\n\x0escreen_timeout\x18\t \x01(\x05\x12\x11\n\twallpaper\x18\n \x01(\t\x12\x13\n\x0bwifi_policy\x18\x0b \x01(\x05\"\x07\n\x05\x45mpty27\n\x12\x46ingerprintService\x12!\n\x07Predict\x12\x0c.Fingerprint\x1a\x06.Empty\"\x00\x62\x06proto3')
 
 
 
@@ -39,9 +39,9 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   _FINGERPRINT._serialized_start=26
-  _FINGERPRINT._serialized_end=302
-  _EMPTY._serialized_start=304
-  _EMPTY._serialized_end=311
-  _FINGERPRINTSERVICE._serialized_start=313
-  _FINGERPRINTSERVICE._serialized_end=381
+  _FINGERPRINT._serialized_end=304
+  _EMPTY._serialized_start=306
+  _EMPTY._serialized_end=313
+  _FINGERPRINTSERVICE._serialized_start=315
+  _FINGERPRINTSERVICE._serialized_end=370
 # @@protoc_insertion_point(module_scope)

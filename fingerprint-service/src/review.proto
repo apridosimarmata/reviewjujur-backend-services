@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "src/fingerprint.proto";
+
+message FingerprintCallbackRequest {
+    string review_uid = 1;
+    string phone_id = 2;
+}
+
+service ReviewService {
+    rpc FingerprintCallback(FingerprintCallbackRequest) returns (Empty) {};
+}

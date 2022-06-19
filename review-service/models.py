@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-import http
-from multiprocessing.sharedctypes import Value
 import uuid
 from flask import jsonify
+from src.review_pb2_grpc import ReviewServiceServicer
+from src.fingerprint_pb2 import Empty
+
 
 class ResponseModel:
     def __init__(self, message, status_code, result):
@@ -50,6 +51,11 @@ class Review:
                 uuid.UUID(self.user_uid)
             except:
                 raise ValueError('Business UID is invalid')
+
+class FingerprintRPCServer(ReviewServiceServicer):
+    def FingerprintCallback(self, request, context):
+        print(request)
+        return Empty()
         
 
 

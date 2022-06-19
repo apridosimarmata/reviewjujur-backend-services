@@ -14,7 +14,7 @@ class AuthenticationResponse:
             'uuid' : user.get('uuid'),
             'email' : user.get('email'),
             'whatsappNo' : user.get('whatsappNo'),
-            'exp' : time.time() + 900
+            'exp' : time.time() + 5
             },
             secret_key,
             algorithm = "HS256"

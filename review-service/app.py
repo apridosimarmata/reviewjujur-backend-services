@@ -1,31 +1,24 @@
-import http
-from flask import Flask, request
-from src.fingerprint_pb2_grpc import FingerprintServiceStub
-from src.fingerprint_pb2 import Fingerprint
-import review
-from models import ResponseModel, Review
-import grpc
+from src.review_pb2_grpc import add_ReviewServiceServicer_to_server
+from models import FingerprintRPCServer
+from concurrent import futures
+from config import config
+from src.routes import app
+import grpc, threading
 
-app = Flask(__name__)
 
-channel = grpc.insecure_channel("localhost:6006", options=(('grpc.enable_http_proxy', 0),))
-
-client = FingerprintServiceStub(channel)
-
-@app.route('/', methods = ['POST'])
-def create():
-    request_data = request.json
-    data = None
-    try:
-        data = Review(
-            text = request_data.get('text'),
-            score = request_data.get('score'),
-            user_uid = request_data.get('userUid'),
-            business_uid = request_data.get('businessUid')
-            )
-        return review.create(data).to_json()
-    except Exception as e:
-        return ResponseModel(F'{e}', http.HTTPStatus.BAD_REQUEST, None).to_json()
+def serve_fingerprint_rpc():
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        port = config.get('REVIEW_PORT_GRPC')
+        add_ReviewServiceServicer_to_server(
+            FingerprintRPCServer(), server
+        )
+        server.add_insecure_port(f"[::]:{port}")
+        server.start()
+        print(f"REVIEW GRPC Running on {port}")
+        server.wait_for_termination()
 
 if __name__ == "__main__":
-    app.run(host = '0.0.0.0', port = 5004)
+    grpc_thread = threading.Thread(target=serve_fingerprint_rpc)
+    grpc_thread.start()
+    app.run(host = '0.0.0.0', port = config.get('REVIEW_PORT_REST'))
+    grpc_thread.join()
