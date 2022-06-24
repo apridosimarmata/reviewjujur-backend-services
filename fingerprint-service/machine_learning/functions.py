@@ -1,7 +1,9 @@
-from pydoc import cli
 import uuid
 from cassandra.cluster import Cluster
 from cassandra.query import dict_factory
+from src import review_pb2_grpc, review_pb2
+import grpc, constants
+from config import config
 
 from utils import *
 
@@ -29,20 +31,32 @@ def jaccard_index(set1, set2):
     jaccard_index = max(len(intersection), 1) / max(len(union), 1)
     return jaccard_index
 
-def number_string_extract_probabilities(column_name, phone_fingerprints):
-    phone_events = len(phone_fingerprints) - 1
-    changed_event_in_phone = 0
-    
-    for index, fingerprint in enumerate(phone_fingerprints):
-        if index > 0 and fingerprint.get(column_name) != phone_fingerprints[index - 1].get(column_name):
-                changed_event_in_phone += 1
-    
-    changed_probability_in_phone = 1
+def number_string_extract_probabilities(column_name, phone_fingerprints, event_type):
+    # Adding current event, last fingerprint vs unknown fingerprint
+    phone_events = 1
 
-    if phone_events > 0:
-        changed_probability_in_phone = changed_event_in_phone / phone_events
+    changed_event = 0
+    unchanged_event = 0
 
-    return {'changed_probability_in_phone' : changed_probability_in_phone, 'unchanged_probability_in_phone' : 1 - changed_probability_in_phone}
+    # events for saved fingerprints, from one fingerprint to another.
+    phone_events += len(phone_fingerprints) - 1
+
+    if event_type == constants.UNCHANGED_EVENT:
+        unchanged_event += 1
+        for index, fingerprint in enumerate(phone_fingerprints):
+            if index > 0 and fingerprint.get(column_name) == phone_fingerprints[index - 1].get(column_name):
+                unchanged_event += 1
+
+        # Returning probability of unchanged value
+        return unchanged_event/phone_events
+    else:
+        changed_event += 1
+        for index, fingerprint in enumerate(phone_fingerprints):
+            if index > 0 and fingerprint.get(column_name) != phone_fingerprints[index - 1].get(column_name):
+                changed_event += 1
+        
+        # Returning probability of changed value
+        return changed_event/phone_events
 
 def enumerate_probability(column_name, phone_fingerprints, value):
     count = 0
@@ -60,14 +74,14 @@ def save_new_fingerprint(unknown_fingerprint):
     'INSERT INTO fingerprints(uid, available_ringtones , external_storage_capacity, input_methods, is_password_shown , kernel_name, location_providers, phone_id, ringtone, screen_timeout , wallpaper, wifi_policy, created_at) '
     'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
     args = [
-        new_phone_id,
+        str(uuid.uuid4()),
         unknown_fingerprint.available_ringtones,
         str(abs(unknown_fingerprint.external_storage_capacity)),
         unknown_fingerprint.input_methods,
         str(unknown_fingerprint.is_password_shown),
         unknown_fingerprint.kernel_name,
         unknown_fingerprint.location_providers,
-        str(uuid.uuid4()),
+        new_phone_id,
         unknown_fingerprint.ringtone,
         str(unknown_fingerprint.screen_timeout),
         unknown_fingerprint.wallpaper,
@@ -79,9 +93,31 @@ def save_new_fingerprint(unknown_fingerprint):
 
     return new_phone_id
 
-from src import review_pb2_grpc, review_pb2
-import grpc
-from config import config
+def save_new_fingerprint_of_known_device(phone_id, fingerprint):
+    statement = session.prepare(
+    'INSERT INTO fingerprints(uid, available_ringtones , external_storage_capacity, input_methods, is_password_shown , kernel_name, location_providers, phone_id, ringtone, screen_timeout , wallpaper, wifi_policy, created_at) '
+    'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+
+    args = [
+        str(uuid.uuid4()),
+        fingerprint.available_ringtones,
+        str(abs(fingerprint.external_storage_capacity)),
+        fingerprint.input_methods,
+        str(fingerprint.is_password_shown),
+        fingerprint.kernel_name,
+        fingerprint.location_providers,
+        phone_id,
+        fingerprint.ringtone,
+        str(fingerprint.screen_timeout),
+        fingerprint.wallpaper,
+        str(fingerprint.wifi_policy),
+        now()
+    ]
+
+    session.execute(statement, args)
+    print(f"saved with id {phone_id}")
+
+    return
 
 channel = grpc.insecure_channel(f"localhost:{config.get('REVIEW_PORT_GRPC')}", options=(('grpc.enable_http_proxy', 0),))
 

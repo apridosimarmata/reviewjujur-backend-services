@@ -1,3 +1,4 @@
 EXPIRED_TOKEN = 1
 SIGNATURE_ERROR = 2
+UNKNOWN_ERROR = 3
 JSON_CONTENT = {'Content-Type': 'application/json'}

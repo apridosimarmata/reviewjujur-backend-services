@@ -19,3 +19,14 @@ def create():
     user = auth.AuthenticationResponse.extract_user(request.headers.get('Access-Token'))
     request.json['userUid'] = user.get('uuid')
     return post_data(get_url(request) , request.json)
+
+@review.route('/business', methods = ['GET'])
+def get_by_bussiness():
+    return get_data(get_url(request))
+
+@review.route('/user', methods = ['GET'])
+@access_token_required
+def get_by_user():
+    user = auth.AuthenticationResponse.extract_user(request.headers.get('Access-Token'))
+    request.path += "/" + user.get('uuid')
+    return get_data(get_url(request))

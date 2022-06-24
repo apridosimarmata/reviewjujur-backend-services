@@ -35,6 +35,13 @@ func GetByEmail(user *User, email string) (err error) {
 	return nil
 }
 
+func GetByUid(user *User, userUid string) (err error) {
+	if err = Configs.DB.Where("uuid = ?", userUid).Find(user).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 func Update(user *User) (err error) {
 	Configs.DB.Save(user)
 	return nil

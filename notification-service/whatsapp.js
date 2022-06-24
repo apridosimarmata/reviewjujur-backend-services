@@ -40,5 +40,9 @@ module.exports = {
 
     sendUserVerificationCode(destination, code){
         client.sendMessage(destination + "@c.us", "*" + code + "* adalah kode verifikasi ReviewJujur Anda.")
+    },
+
+    sendMessage(destination, message){
+        client.sendMessage(destination + "@c.us", message)
     }
 }

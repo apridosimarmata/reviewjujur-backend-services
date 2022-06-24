@@ -8,12 +8,16 @@ message User {
     string verificationCode = 5;
 }
 
+message ReviewNotificationRequest {
+    string user_uid = 1;
+    string business_uid = 2;
+    string reason = 3;
+}
+
 message Empty{}
 
 service NotificationService{
     rpc SendUserVerificationCode(User) returns (Empty) {}
-}
-
-service NotificationServiceClient{
-    rpc SendUserVerificationCode(User) returns (Empty) {}
+    rpc SendUserNoticationReviewRejected(ReviewNotificationRequest) returns (Empty) {}
+    rpc SendNotificationReviewAccepted(ReviewNotificationRequest) returns (Empty) {}
 }

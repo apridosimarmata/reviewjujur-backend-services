@@ -12,6 +12,8 @@ def authorize(request):
         return make_response(HTTPStatus.NOT_ACCEPTABLE, 'Not Acceptable', None)
     elif isinstance(user, dict):
         return make_response(HTTPStatus.OK, None, user)
+    else:
+        return make_response(HTTPStatus.INTERNAL_SERVER_ERROR, 'Server: Unknown Error', None)
 
 def refresh_token(refresh_token):
     user = AuthenticationResponse.extract_user(refresh_token)
@@ -21,6 +23,8 @@ def refresh_token(refresh_token):
         return make_response(HTTPStatus.NOT_ACCEPTABLE, 'Not Acceptable', None)
     elif isinstance(user, dict):
         return make_response(HTTPStatus.CREATED, None, AuthenticationResponse(user))
+    else:
+        return make_response(HTTPStatus.INTERNAL_SERVER_ERROR, 'Server: Unknown Error', None)
 
 def create_authorization_response(code):
     if code == EXPIRED_TOKEN:

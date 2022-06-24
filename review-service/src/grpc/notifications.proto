@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+import "src/grpc/fingerprint.proto";
+
+message ReviewNotificationRequest {
+    string user_uid = 1;
+    string business_uid = 2;
+    string reason = 3;
+}
+
+service NotificationService{
+    rpc SendUserNoticationReviewRejected(ReviewNotificationRequest) returns (Empty) {}
+    rpc SendNotificationReviewAccepted(ReviewNotificationRequest) returns (Empty) {}
+}
+

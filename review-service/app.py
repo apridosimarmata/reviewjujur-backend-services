@@ -1,5 +1,5 @@
-from src.review_pb2_grpc import add_ReviewServiceServicer_to_server
-from models import FingerprintRPCServer
+from src.grpc.server.review_pb2_grpc import add_ReviewServiceServicer_to_server
+from src.grpc.server.server import ReviewService
 from concurrent import futures
 from config import config
 from src.routes import app
@@ -10,7 +10,7 @@ def serve_fingerprint_rpc():
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         port = config.get('REVIEW_PORT_GRPC')
         add_ReviewServiceServicer_to_server(
-            FingerprintRPCServer(), server
+            ReviewService(), server
         )
         server.add_insecure_port(f"[::]:{port}")
         server.start()

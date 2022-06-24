@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-import jwt, secrets, time
+import jwt, time
 from utils.constants import *
 
 #secret_key = secrets.token_urlsafe(16)
@@ -14,7 +14,7 @@ class AuthenticationResponse:
             'uuid' : user.get('uuid'),
             'email' : user.get('email'),
             'whatsappNo' : user.get('whatsappNo'),
-            'exp' : time.time() + 5
+            'exp' : time.time() + 900
             },
             secret_key,
             algorithm = "HS256"
@@ -42,4 +42,4 @@ class AuthenticationResponse:
             elif isinstance(e, jwt.InvalidSignatureError):
                 return SIGNATURE_ERROR
             else:
-                print(e)
+                return UNKNOWN_ERROR

@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package user;
+
+message User {
+    string fcmToken = 1;
+    string name = 2;
+    string whatsappNo = 3;
+    string email = 4;
+}
+
+message UserByUidRequest {
+    string uid = 1;
+}
+
+message Empty{}
+
+service UserService{
+    rpc GetUserByUid(UserByUidRequest) returns (user.User) {}
+}

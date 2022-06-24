@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	"path/filepath"
+
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 )
@@ -23,10 +25,11 @@ type DBConfig struct {
 
 func goDotEnvVariable(key string) string {
 
-	err := godotenv.Load(".env")
+	filePath, _ := filepath.Abs(".env")
+	err := godotenv.Load(filePath)
 
 	if err != nil {
-		log.Fatalf("Error loading .env file")
+		log.Fatalf("Error loading .env file", err.Error())
 	}
 
 	return os.Getenv(key)

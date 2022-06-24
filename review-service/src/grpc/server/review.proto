@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "src/fingerprint.proto";
+import "src/grpc/fingerprint.proto";
 
 message FingerprintCallbackRequest {
     string review_uid = 1;
