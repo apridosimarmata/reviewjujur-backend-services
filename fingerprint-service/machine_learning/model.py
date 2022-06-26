@@ -1,7 +1,7 @@
 from cassandra.cluster import Cluster
 from cassandra.query import dict_factory
 
-from .functions import *
+from machine_learning.functions import *
 
 from numpy import prod
 
@@ -33,12 +33,15 @@ def predict(unknown_fingerprint):
 
     for inputMethod in inputMethods:
         input_methods_processed.append(re.sub(r'[^\w'+remove+']', '',inputMethod))
+    unknown_fingerprint.input_methods = ",".join(input_methods_processed)
     
     for ringtone in ringtones:
-        ringtones_processed.append(re.sub(r'[^\w'+remove+']', '', ringtone))
-    
+        ringtones_processed.append(ringtone.strip())
+    unknown_fingerprint.available_ringtones = ",".join(ringtones_processed).strip()
+
     for locationProvider in locationProviders:
         location_providers_processed.append(re.sub(r'[^\w'+remove+']', '', locationProvider))
+    unknown_fingerprint.location_providers = ",".join(location_providers_processed)
 
     fingerprints = session.execute('SELECT * FROM fingerprints')
     phone_fingerprints = {}
@@ -113,27 +116,28 @@ def predict(unknown_fingerprint):
         similarity = prod(probabilities)
 
         sum += similarity
-        
-        if max_similarity < similarity and similarity > .5:
-            print(f'{probabilities} {similarity} {phone}')
+
+        if max_similarity < similarity and similarity >= .4:
+            print(f'{probabilities} {similarity} -> {phone}')
             max_similarity = similarity
             phone_identified = phone
     
-    print(f"max similarity is {max_similarity}/{sum} {max_similarity/sum} with phone_id {phone_identified}")
     # If it's a new device
     if phone_identified is None:
-        print("Saving new fingerprint ...")
-        phone_identified = save_new_fingerprint(unknown_fingerprint)
+        pass
+        #print("Saving new fingerprint ...")
+        #phone_identified = save_new_fingerprint(unknown_fingerprint)
     
     # If the device known but the fingerprint is new
     # Check the submitted fingerprint to each fingerprint in fingerprints of identified phone
     if phone_identified != None and max_similarity < 1:
-        save_new_fingerprint_of_known_device(phone_identified, unknown_fingerprint)
+        pass
+        #save_new_fingerprint_of_known_device(phone_identified, unknown_fingerprint)
 
-    print("Sending callback to the REVIEW-SERVICE")
+    print(f"Sending callback to the REVIEW-SERVICE {phone_identified}")
 
-    print(phone_identified)
-        
-    send_fingerprint_callback(
+    '''send_fingerprint_callback(
         review_uid = unknown_fingerprint.review_uid,
-        phone_id = phone_identified)
+        phone_id = phone_identified)'''
+    
+    return phone_identified

@@ -54,7 +54,6 @@ def create(review):
     return ResponseModel('Success', http.HTTPStatus.OK, {'reviewUid' : review_uid})
 
 def update(review_uid, phone_id):
-    print("a callback!")
     statement = session.prepare('SELECT * FROM reviews where uid = ?')
     arg = [review_uid]
     current_review = session.execute(statement, arg)[0]

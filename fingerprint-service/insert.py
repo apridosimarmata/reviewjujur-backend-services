@@ -1,7 +1,7 @@
 import csv, re
 from http import client
 from utils import *
-import uuid
+import uuid, ast
 from cassandra.cluster import Cluster
 from cassandra.query import dict_factory
 
@@ -27,8 +27,9 @@ with open('fingerprints.csv', encoding="utf8") as csv_file:
 
         for location_provider in row[4].split(','):
             location_providers_processed.append(re.sub(r'[^\w'+removelist+']', '', location_provider))
-        for ringtone in ringtones:
-            ringtones_processed.append(re.sub(r'[^\w'+removelist+']', '', ringtone))
+        
+        for ringtone in ast.literal_eval(row[7]):
+            ringtones_processed.append(ringtone.strip())
 
         for input_method in input_methods:
             input_methods_processed.append(re.sub(r'[^\w'+removelist+']', '', input_method))
