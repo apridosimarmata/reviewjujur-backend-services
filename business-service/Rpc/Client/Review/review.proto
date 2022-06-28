@@ -1,12 +1,5 @@
 syntax = "proto3";
 
-import "src/grpc/fingerprint.proto";
-
-message FingerprintCallbackRequest {
-    string review_uid = 1;
-    string phone_id = 2;
-}
-
 message Rating {
     int32 score = 1;
     int32 reviews_count = 2;
@@ -17,6 +10,5 @@ message GetBusinessRatingRequest{
 }
 
 service ReviewService {
-    rpc FingerprintCallback(FingerprintCallbackRequest) returns (Empty) {};
     rpc GetBusinessRating(GetBusinessRatingRequest) returns (Rating) {};
 }

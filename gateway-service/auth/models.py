@@ -14,6 +14,7 @@ class AuthenticationResponse:
             'uuid' : user.get('uuid'),
             'email' : user.get('email'),
             'whatsappNo' : user.get('whatsappNo'),
+            'name' : user.get('name'),
             'exp' : time.time() + 900
             },
             secret_key,
@@ -23,6 +24,7 @@ class AuthenticationResponse:
             'uuid' : user.get('uuid'),
             'email' : user.get('email'),
             'whatsappNo' : user.get('whatsappNo'),
+            'name' : user.get('name'),
             'exp' : time.time() + 2592000
             },
             secret_key,
@@ -42,4 +44,5 @@ class AuthenticationResponse:
             elif isinstance(e, jwt.InvalidSignatureError):
                 return SIGNATURE_ERROR
             else:
+                print(e)
                 return UNKNOWN_ERROR

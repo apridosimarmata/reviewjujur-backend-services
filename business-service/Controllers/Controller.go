@@ -90,6 +90,23 @@ func GetBusinessByUid(c *gin.Context) {
 	if err != nil {
 		message = err.Error()
 		Utils.MakeResponse(c, http.StatusNotFound, &message, nil)
+		return
+	}
+
+	message = "Success"
+
+	Utils.MakeResponse(c, http.StatusOK, &message, business)
+}
+
+func GetBusinessByUserUid(c *gin.Context) {
+	var business Models.Business
+	var message string
+	err := Models.GetBusinessByOwnerUid(&business, uuid.UUID(uuidSatori.FromStringOrNil(c.Params.ByName("userUid"))))
+
+	if err != nil {
+		message = err.Error()
+		Utils.MakeResponse(c, http.StatusNotFound, &message, nil)
+		return
 	}
 
 	message = "Success"
@@ -98,6 +115,9 @@ func GetBusinessByUid(c *gin.Context) {
 }
 
 func RegisterBusiness(c *gin.Context) {
+	Utils.LoadEnv()
+	sess := Utils.ConnectAws()
+
 	var businessRequest Models.BusinessRequest
 	var message string
 	err := c.BindJSON(&businessRequest)
@@ -108,13 +128,17 @@ func RegisterBusiness(c *gin.Context) {
 		return
 	}
 
+	fileName := Utils.RandStringRunes(20)
+
+	go Utils.AddFileToS3(sess, businessRequest.Photo, fileName)
+
 	var business Models.Business
 
 	business.Uid = uuid.New()
 
 	business.Address = businessRequest.Address
 	business.Name = businessRequest.Name
-	business.Photo = businessRequest.Photo
+	business.Photo = fileName
 
 	business.CreatedAt = Utils.Now()
 	business.OwnerUid = uuid.UUID(uuidSatori.FromStringOrNil(businessRequest.OwnerUid))

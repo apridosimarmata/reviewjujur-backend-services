@@ -17,8 +17,15 @@ def get_url(request):
 @access_token_required
 def register():
     user = auth.AuthenticationResponse.extract_user(request.headers.get('Access-Token'))
-    request.json['owner_uid'] = user.get('uuid')
+    request.json['ownerUid'] = user.get('uuid')
     return post_data(get_url(request) , request.json)
+
+@business.route('/user', methods = ['GET'])
+@access_token_required
+def get_by_user():
+    user = auth.AuthenticationResponse.extract_user(request.headers.get('Access-Token'))
+    request.path += "/" + user.get('uuid')
+    return get_data(get_url(request))
 
 @business.route('/provinces', methods = ['POST'])
 @access_token_required

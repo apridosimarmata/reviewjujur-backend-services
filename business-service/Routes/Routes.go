@@ -11,6 +11,8 @@ func SetupRouter() *gin.Engine {
 
 	router.POST("/", Controllers.RegisterBusiness)
 
+	router.GET("/user/:userUid", Controllers.GetBusinessByUserUid)
+
 	router.GET("/:businessUid", Controllers.GetBusinessByUid)
 
 	router.POST("/provinces", Controllers.RegisterProvince)

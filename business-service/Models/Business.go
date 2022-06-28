@@ -30,6 +30,13 @@ func GetBusinessByUid(business *Business, businessUid uuid.UUID) (err error) {
 	return nil
 }
 
+func GetBusinessByOwnerUid(business *Business, ownerUid uuid.UUID) (err error) {
+	if err = Configs.DB.Where("owner_uid = ?", ownerUid).First(business).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 func PaginateBusiness(businessPagination BusinessPagination) (any BusinessPagination, err error) {
 	var res []*Business
 	Configs.DB.Scopes(paginate(&res, &businessPagination, Configs.DB)).Find(&res)

@@ -119,6 +119,7 @@ func VerifyVerificationCode(c *gin.Context) {
 	userResponse.Uuid = user.Uuid.String()
 	userResponse.Email = user.Email
 	userResponse.WhatsappNo = user.WhatsappNo
+	userResponse.Name = user.Name
 
 	Utils.MakeResponse(c, http.StatusOK, &message, userResponse)
 }
@@ -155,6 +156,7 @@ func VerifyPassword(c *gin.Context) {
 	userResponse.Uuid = user.Uuid.String()
 	userResponse.Email = user.Email
 	userResponse.WhatsappNo = user.WhatsappNo
+	userResponse.Name = user.Name
 
 	Utils.MakeResponse(c, http.StatusOK, nil, userResponse)
 }

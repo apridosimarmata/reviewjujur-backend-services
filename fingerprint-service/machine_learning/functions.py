@@ -57,16 +57,32 @@ def number_string_extract_probabilities(column_name, phone_fingerprints, event_t
         
         # Returning probability of changed value
         return changed_event/phone_events
-
+import ast
 def enumerate_probability(column_name, phone_fingerprints, value):
-    count = 0
-    for fingerprint in phone_fingerprints:
-        if fingerprint.get(column_name) == value:
-            count += 1
-    
-    count += 1
+    if column_name == 'location_providers':
+        values = value.split(",")
+        prob = [1, 1]
+        for fingerprint in phone_fingerprints:
+            fingerprint_value = ast.literal_eval(fingerprint.get(column_name))
+            if values[0] == fingerprint_value[0]:
+                prob[0] += 1
 
-    return count / (len(phone_fingerprints) + 1)
+            if values[1] == fingerprint_value[1]:
+                prob[1] += 1
+        return (prob[0] / (len(phone_fingerprints) + 1)) * (prob[1] / (len(phone_fingerprints) + 1))
+    else:
+        count = 0
+        fingerprint_values = []
+        for fingerprint in phone_fingerprints:
+            for item in fingerprint.get(column_name).split(","):
+                fingerprint_values.append(item)
+        
+        count += 1
+
+        for item in fingerprint_values:
+            if item == value:
+                count += 1
+        return count / (len(fingerprint_values) + 1)
 
 def save_new_fingerprint(unknown_fingerprint):
     new_phone_id = str(uuid.uuid4())
@@ -129,3 +145,10 @@ def send_fingerprint_callback(review_uid, phone_id):
                 phone_id = phone_id
             )
         )
+
+def check_if_fingerprint_exist_in_phone_fingerprints(phone_fingerprints, fingerprint):
+    for fingerprint in phone_fingerprints:
+        for col in column_names:
+            if fingerprint.get(col) != fingerprint.get(col):
+                return  False
+    return True

@@ -36,10 +36,10 @@ def create(review):
         return ResponseModel(f'{e}', http.HTTPStatus.INTERNAL_SERVER_ERROR, None)
     
     # Create business reviews row
-    statement = session.prepare('INSERT INTO business_reviews(business_uid, created_at, phone_uid, review_uid) VALUES (?, ?, ?, ?)')
+    statement = session.prepare('INSERT INTO business_reviews(business_uid, created_at, phone_uid, review_uid, score) VALUES (?, ?, ?, ?, ?)')
 
     try:
-        session.execute(statement, [review.business_uid, now_timestamp, "", review_uid])
+        session.execute(statement, [review.business_uid, now_timestamp, "", review_uid, review.score])
     except Exception as e:
         return ResponseModel(f'{e}', http.HTTPStatus.INTERNAL_SERVER_ERROR, None)
     
@@ -54,6 +54,7 @@ def create(review):
     return ResponseModel('Success', http.HTTPStatus.OK, {'reviewUid' : review_uid})
 
 def update(review_uid, phone_id):
+    print("Received a callback from FINGERPRINT-SERVICE")
     statement = session.prepare('SELECT * FROM reviews where uid = ?')
     arg = [review_uid]
     current_review = session.execute(statement, arg)[0]
@@ -141,12 +142,15 @@ def get_business_reviews(business_uid, created_at):
             review = session.execute(f'SELECT * FROM reviews where uid = \'{uid}\'')[0]
             to_append = {}
             for key in review.keys():
-                to_append[to_camel_case(key)] = review[key]
+                if type(review[key]) == int:
+                    to_append[to_camel_case(key)] = str(review[key])
+                else:
+                    to_append[to_camel_case(key)] = review[key]
             reviews.append(to_append)
         except Exception as e:
             print(e)
             pass
-
+    print(reviews)
     return ResponseModel(
             'Success',
             http.HTTPStatus.OK,
@@ -161,7 +165,6 @@ def get_user_reviews(user_uid, created_at):
         statement = f'SELECT * FROM user_reviews where user_uid = \'{user_uid}\' AND created_at > {created_at} ORDER BY created_at LIMIT 10'
 
     review_uids = []
-    print(statement)
 
     for review in session.execute(statement):
         review_uids.append(review.get('review_uid'))
@@ -173,7 +176,10 @@ def get_user_reviews(user_uid, created_at):
             review = session.execute(f'SELECT * FROM reviews where uid = \'{uid}\'')[0]
             to_append = {}
             for key in review.keys():
-                to_append[to_camel_case(key)] = review[key]
+                if type(review[key]) == int:
+                    to_append[to_camel_case(key)] = str(review[key])
+                else:
+                    to_append[to_camel_case(key)] = review[key]
             for key in statuses_key.keys():
                 if statuses_key[key] == review.get('status'):
                     to_append['status'] = key

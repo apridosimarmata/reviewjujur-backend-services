@@ -19,8 +19,8 @@ for value in phone_ids:
 
 phone_fingerprints = {}
 
-def predict(unknown_fingerprint):
-    print("Predicting now ....")
+def predict(unknown_fingerprint):#,expected_id):
+    to_compare = {}
 
     remove = "."
     ringtones = unknown_fingerprint.available_ringtones.split(',')
@@ -55,35 +55,46 @@ def predict(unknown_fingerprint):
     sum = 0
     phone_identified = None
 
+    to_compare['wallpaper'] = unknown_fingerprint.wallpaper
+    to_compare['kernel_name'] = unknown_fingerprint.kernel_name
+    to_compare['input_methods'] = ",".join(input_methods_processed)
+    to_compare['ringtone'] = unknown_fingerprint.ringtone
+    to_compare['screen_timeout'] = str(unknown_fingerprint.screen_timeout)
+    to_compare['external_storage_capacity'] = str(unknown_fingerprint.external_storage_capacity)
+    to_compare['is_password_shown'] = str(unknown_fingerprint.is_password_shown)
+    to_compare['location_providers'] = ",".join(location_providers_processed)
+    to_compare['wifi_policy'] = str(unknown_fingerprint.wifi_policy)
+    to_compare['available_ringtones'] = set(ringtones_processed)
+
     for phone in phone_fingerprints.keys():
         probabilities = []
         # List type
 
         # Available ringtones [1]
-        probabilities.append(jaccard_index(set(ringtones_processed), set(phone_fingerprints[phone][-1].get('available_ringtones').split(','))))
+        probabilities.append(jaccard_index(to_compare['available_ringtones'], set(phone_fingerprints[phone][-1].get('available_ringtones').split(','))))
 
         # String type
 
         # Wallpaper [2]
-        if unknown_fingerprint.wallpaper == phone_fingerprints[phone][-1].get('wallpaper'):
+        if to_compare['wallpaper'] == phone_fingerprints[phone][-1].get('wallpaper'):
             probabilities.append(number_string_extract_probabilities('wallpaper', phone_fingerprints[phone], constants.UNCHANGED_EVENT))
         else:
             probabilities.append(number_string_extract_probabilities('wallpaper', phone_fingerprints[phone], constants.CHANGED_EVENT))
         
         # Kernel [3]
-        if unknown_fingerprint.kernel_name == phone_fingerprints[phone][-1].get('kernel_name'):
+        if to_compare['kernel_name'] == phone_fingerprints[phone][-1].get('kernel_name'):
             probabilities.append(number_string_extract_probabilities('kernel_name', phone_fingerprints[phone], constants.UNCHANGED_EVENT))
         else:
             probabilities.append(number_string_extract_probabilities('kernel_name', phone_fingerprints[phone], constants.CHANGED_EVENT))
         
         # Input methods [4]
-        if ",".join(input_methods_processed) == phone_fingerprints[phone][-1].get('input_methods'):
+        if to_compare['input_methods'] == phone_fingerprints[phone][-1].get('input_methods'):
             probabilities.append(number_string_extract_probabilities('input_methods', phone_fingerprints[phone], constants.UNCHANGED_EVENT))
         else:
             probabilities.append(number_string_extract_probabilities('input_methods', phone_fingerprints[phone], constants.CHANGED_EVENT))
         
         # Ringtone [5]
-        if unknown_fingerprint.ringtone == phone_fingerprints[phone][-1].get('ringtone'):
+        if to_compare['ringtone'] == phone_fingerprints[phone][-1].get('ringtone'):
             probabilities.append(number_string_extract_probabilities('ringtone', phone_fingerprints[phone], constants.UNCHANGED_EVENT))
         else:
             probabilities.append(number_string_extract_probabilities('ringtone', phone_fingerprints[phone], constants.CHANGED_EVENT))
@@ -91,13 +102,13 @@ def predict(unknown_fingerprint):
         # Number / Int
 
         # Screen time out [6]
-        if str(unknown_fingerprint.screen_timeout) == phone_fingerprints[phone][-1].get('screen_timeout'):
+        if to_compare['screen_timeout'] == phone_fingerprints[phone][-1].get('screen_timeout'):
             probabilities.append(number_string_extract_probabilities('screen_timeout', phone_fingerprints[phone], constants.UNCHANGED_EVENT))
         else:
             probabilities.append(number_string_extract_probabilities('screen_timeout', phone_fingerprints[phone], constants.CHANGED_EVENT))
         
         # External storage [7]
-        if str(unknown_fingerprint.external_storage_capacity) == phone_fingerprints[phone][-1].get('external_storage_capacity'):
+        if to_compare['external_storage_capacity'] == phone_fingerprints[phone][-1].get('external_storage_capacity'):
             probabilities.append(number_string_extract_probabilities('external_storage_capacity', phone_fingerprints[phone], constants.UNCHANGED_EVENT))
         else:
             probabilities.append(number_string_extract_probabilities('external_storage_capacity', phone_fingerprints[phone], constants.CHANGED_EVENT))
@@ -105,39 +116,38 @@ def predict(unknown_fingerprint):
         # Enumerate data type
 
         # Is Password Shown [8]
-        probabilities.append(enumerate_probability('is_password_shown', phone_fingerprints[phone], str(unknown_fingerprint.is_password_shown)))
+        probabilities.append(enumerate_probability('is_password_shown', phone_fingerprints[phone], to_compare['is_password_shown']))
         
         # Location Providers [9]
-        probabilities.append(enumerate_probability('location_providers', phone_fingerprints[phone], ",".join(location_providers_processed)))
+        probabilities.append(enumerate_probability('location_providers', phone_fingerprints[phone], to_compare['location_providers']))
 
         # Wifi Policy
-        probabilities.append(enumerate_probability('wifi_policy', phone_fingerprints[phone], str(unknown_fingerprint.wifi_policy)))
+        probabilities.append(enumerate_probability('wifi_policy', phone_fingerprints[phone], to_compare['wifi_policy']))
 
         similarity = prod(probabilities)
 
         sum += similarity
 
-        if max_similarity < similarity and similarity >= .4:
-            print(f'{probabilities} {similarity} -> {phone}')
+        if max_similarity < similarity and similarity >= 0.0:
+            print(f'{probabilities} {similarity} -> {phone} {phone_fingerprints[phone][0].get("kernel_name")}')
             max_similarity = similarity
             phone_identified = phone
     
     # If it's a new device
     if phone_identified is None:
-        pass
-        #print("Saving new fingerprint ...")
-        #phone_identified = save_new_fingerprint(unknown_fingerprint)
+        print("New device, saving fingerprint")
+        phone_identified = save_new_fingerprint(unknown_fingerprint)
     
     # If the device known but the fingerprint is new
     # Check the submitted fingerprint to each fingerprint in fingerprints of identified phone
-    if phone_identified != None and max_similarity < 1:
-        pass
-        #save_new_fingerprint_of_known_device(phone_identified, unknown_fingerprint)
+    if phone_identified != None and not check_if_fingerprint_exist_in_phone_fingerprints(phone_fingerprints[phone_identified], to_compare):
+        print("Known device, new fingerprint. Saving ...")
+        save_new_fingerprint_of_known_device(phone_identified, unknown_fingerprint)
 
-    print(f"Sending callback to the REVIEW-SERVICE {phone_identified}")
+    #print(f"Sending callback to the REVIEW-SERVICE {phone_identified}")
 
-    '''send_fingerprint_callback(
+    send_fingerprint_callback(
         review_uid = unknown_fingerprint.review_uid,
-        phone_id = phone_identified)'''
+        phone_id = phone_identified)
     
     return phone_identified

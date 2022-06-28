@@ -58,8 +58,13 @@ with open('ordered_fingerprints.csv', encoding="utf8") as csv_file:
     test = {}
 
     for phone_uid in phones_and_its_fingerprints.keys():
-        if len(phones_and_its_fingerprints[phone_uid]) > 1:
-            for row in phones_and_its_fingerprints[phone_uid][len(phones_and_its_fingerprints[phone_uid]) - 1:]:
+        if len(phones_and_its_fingerprints[phone_uid]) > 0:
+            rows = phones_and_its_fingerprints[phone_uid][:len(phones_and_its_fingerprints[phone_uid]) - 1]
+            if len(phones_and_its_fingerprints[phone_uid]) == 1:
+                rows = phones_and_its_fingerprints[phone_uid]
+            else:
+                test[phone_uid] = phones_and_its_fingerprints[phone_uid][len(phones_and_its_fingerprints[phone_uid]) - 1]
+            for row in rows:
                 args = [
                     str(uuid.uuid4()),
                     ",".join(row[7]).strip(),
@@ -80,7 +85,6 @@ with open('ordered_fingerprints.csv', encoding="utf8") as csv_file:
                     'VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
                 session.execute(statement, args)
             
-            test[phone_uid] = phones_and_its_fingerprints[phone_uid][len(phones_and_its_fingerprints[phone_uid]) - 1]
             #print(phone_uid, end = ' -')
             #print(test[phone_uid])
     
@@ -102,9 +106,10 @@ with open('ordered_fingerprints.csv', encoding="utf8") as csv_file:
             wifi_policy = int(data[10])
         )
         print(f"should be {key}")
-        if predict(fingerprint) == key:
+        if predict(fingerprint, key) == key:
             correct += 1
         else:
             print(F"INCORRECT! {data[3]}")
+        print("\n\n\n")
+    print(f'accuraccy { correct/len(list(test.keys())) * 100 }% from {len(list(test.keys()))}')
     
-    print(f'accuraccy { correct/len(list(test.keys())) * 100 }%')

@@ -13,21 +13,21 @@ type dialNotificationsAPI struct {
 	NotificationServiceClient NotificationServiceClient
 }
 
-var initDefaulNotificationsAPI *dialNotificationsAPI = nil
-var onceDefaulNotificationsAPI sync.Once
+var initDefaultNotificationsAPI *dialNotificationsAPI = nil
+var onceDefaultNotificationsAPI sync.Once
 
 func DialNotificationsAPI(context context.Context) *dialNotificationsAPI {
-	onceDefaulNotificationsAPI.Do(func() {
+	onceDefaultNotificationsAPI.Do(func() {
 		conn, err := grpc.Dial("localhost:6005", grpc.WithInsecure())
 
 		if err != nil {
 			log.Println(fmt.Printf("did not connect: %s", err))
 		}
 
-		initDefaulNotificationsAPI = &dialNotificationsAPI{
+		initDefaultNotificationsAPI = &dialNotificationsAPI{
 			NotificationServiceClient: NewNotificationServiceClient(conn),
 		}
 	})
 
-	return initDefaulNotificationsAPI
+	return initDefaultNotificationsAPI
 }

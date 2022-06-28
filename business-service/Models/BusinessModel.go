@@ -13,7 +13,7 @@ type Business struct {
 	ProvinceUid uuid.UUID `json:"provinceUid" gorm:"not null;size:36"`
 
 	Name    string `json:"name" gorm:"not null;size:20"`
-	Address string `json:"address" gorm:"not null;size:20"`
+	Address string `json:"address" gorm:"not null;size:30"`
 	Photo   string `json:"photo" gorm:"not null;size:100"`
 
 	ReviewsCount int `json:"reviewsCount" gorm:"default:0"`
@@ -24,11 +24,11 @@ type Business struct {
 }
 
 type BusinessRequest struct {
-	OwnerUid    string `json:"owner_uid"`
-	LocationUid string `json:"location_uid"`
-	ProvinceUid string `json:"province_uid"`
+	OwnerUid    string `json:"ownerUid"`
+	LocationUid string `json:"locationUid"`
+	ProvinceUid string `json:"provinceUid"`
 
 	Name    string `json:"name"`
 	Address string `json:"address"`
-	Photo   string `json:"photo" gorm:"not null;size:40"`
+	Photo   string `json:"photo" gorm:"not null"`
 }
