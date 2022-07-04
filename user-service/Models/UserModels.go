@@ -15,7 +15,6 @@ type UserRequest struct {
 
 type UserChangePasswordRequest struct {
 	Email       string `json:"email" binding:"required,email"`
-	Password    string `json:"password" binding:"required"`
 	NewPassword string `json:"newPassword" binding:"required"`
 }
 
@@ -31,21 +30,28 @@ type User struct {
 	CreatedAt       time.Time
 	VerifiedAt      *time.Time
 	CodeRequestedAt *int64
+	UnsuspendAt     *int64
 }
 
 type UserResponse struct {
-	Uuid       string `json:"uuid" gorm:"primaryKey"`
-	Name       string `json:"name"`
-	Email      string `json:"email"`
-	WhatsappNo string `json:"whatsappNo"`
+	Uuid        string     `json:"uuid" gorm:"primaryKey"`
+	Name        string     `json:"name"`
+	Email       string     `json:"email"`
+	WhatsappNo  string     `json:"whatsappNo"`
+	VerifiedAt  *time.Time `json:"verifiedAt"`
+	UnsuspendAt string     `json:"unsuspendAt"`
 }
 
 type UserVerificationCodeRequest struct {
-	WhatsappNo       string `json:"phone" binding:"required,numeric"`
-	VerificationCode string `json:"verificationCode"`
+	WhatsappNo       string `json:"whatsappNo" binding:"required,numeric"`
+	VerificationCode string `json:"code"`
 }
 
 type UserVerifyPasswordRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+}
+
+type UserSuspendRequest struct {
+	Uid string `json:"uid" binding:"required"`
 }

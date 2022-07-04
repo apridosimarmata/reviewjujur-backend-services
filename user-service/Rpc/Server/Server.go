@@ -23,6 +23,8 @@ func (s *Server) GetUserByUid(ctx context.Context, user *UserByUidRequest) (*Use
 	userResponse.Email = userModel.Email
 	userResponse.Name = userModel.Name
 	userResponse.WhatsappNo = userModel.WhatsappNo
+	userResponse.UnsuspendAt = int32(*userModel.UnsuspendAt)
+	userResponse.Uid = userModel.Uuid.String()
 
 	return &userResponse, nil
 }

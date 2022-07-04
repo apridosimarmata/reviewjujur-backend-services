@@ -1,17 +1,16 @@
 package Models
 
 type BusinessPagination struct {
-	Limit           int         `json:"limit,omitempty;query:limit"`
-	Page            int         `json:"page,omitempty;query:page"`
-	Sort            string      `json:"sort,omitempty;query:sort"`
-	LocationUid     string      `json:"locationUid"`
-	Location        string      `json:"location"`
-	Province        string      `json:"province"`
-	BusinessName    string      `json:"businessName,omitempty"`
-	BusinessAddress string      `json:"businessAddress,omitempty"`
-	TotalRows       int64       `json:"totalRows"`
-	TotalPages      int         `json:"totalPages"`
-	Rows            interface{} `json:"rows"`
+	Limit       int         `json:"limit,omitempty;query:limit"`
+	Page        int         `json:"page,omitempty;query:page"`
+	Sort        string      `json:"sort,omitempty;query:sort"`
+	LocationUid string      `json:"locationUid"`
+	Location    string      `json:"location"`
+	Province    string      `json:"province"`
+	Query       string      `json:"query,omitempty"`
+	TotalRows   int64       `json:"totalRows"`
+	TotalPages  int         `json:"totalPages"`
+	Rows        interface{} `json:"rows"`
 }
 
 func NewBusinessPagination() BusinessPagination {
@@ -42,7 +41,7 @@ func (p *BusinessPagination) GetPage() int {
 
 func (p *BusinessPagination) GetSort() string {
 	if p.Sort == "" {
-		p.Sort = "uid desc"
+		p.Sort = "uid"
 	}
 	return p.Sort + " desc"
 }

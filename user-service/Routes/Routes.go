@@ -13,17 +13,27 @@ func SetupRouter() *gin.Engine {
 
 	router.GET("/")
 
-	router.GET("/verification/code/:whatsapp_no", Controllers.RequestVerificationCode)
+	router.GET("/verification/whatsapp/:whatsapp_no", Controllers.RequestVerificationCode)
 
-	router.POST("/verification/code", Controllers.VerifyVerificationCode)
+	router.POST("/authentication/whatsapp", Controllers.VerifyVerificationCode)
 
-	router.POST("/verification/password", Controllers.VerifyPassword)
+	router.POST("/authentication/password", Controllers.VerifyPassword)
 
-	router.PATCH("/update/name", Controllers.UpdateName)
+	router.PATCH("/name", Controllers.UpdateName)
 
-	router.PATCH("/update/password", Controllers.UpdatePassword)
+	router.PATCH("/password", Controllers.UpdatePassword)
 
-	router.POST("/form")
+	/* Administrator routers */
+
+	router.GET("/administrator/verification/whatsapp/:whatsapp_no", Controllers.AdministratorRequestVerificationCode)
+
+	router.POST("/administrator/authentication/whatsapp", Controllers.AdministratorVerifyVerificationCode)
+
+	router.GET("/administrator/users", Controllers.GetUsers)
+
+	router.GET("/administrator/users/:user_uid", Controllers.GetUserByUid)
+
+	router.PATCH("/administrator/users/suspend", Controllers.SuspendUser)
 
 	return router
 }

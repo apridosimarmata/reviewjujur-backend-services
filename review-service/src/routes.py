@@ -2,7 +2,7 @@ from flask import request, Flask
 from config import config
 from src.grpc import fingerprint_pb2
 from src.models import Review, ResponseModel
-from src.services import fingerprint
+from src.services import fingerprint, business
 import src.review, http
 
 app = Flask(__name__)
@@ -23,6 +23,19 @@ def get_by_business():
 
 @app.route('/user/<user_uid>', methods = ['GET'])
 def get_by_user(user_uid):
+    created_at = request.args.get('createdAt')
+    if user_uid != None:
+        if created_at != None:
+            return src.review.get_user_reviews(user_uid, int(created_at))
+        else:
+            return src.review.get_user_reviews(user_uid, None)
+    return ResponseModel(
+        'User UID not provided',
+        http.HTTPStatus.OK,
+    ).to_json()
+
+@app.route('/administrator/reviews/user/<user_uid>', methods = ['GET'])
+def admin_get_by_user(user_uid):
     created_at = request.args.get('createdAt')
     if user_uid != None:
         if created_at != None:

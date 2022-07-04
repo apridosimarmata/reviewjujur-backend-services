@@ -6,7 +6,7 @@ from cassandra.query import dict_factory
 import uuid
 from src.utils import now, one_week_ago
 from src.models import ResponseModel
-from src.services import notification
+from src.services import notification, business, user
 from config import config
 from utils import to_camel_case
 
@@ -68,9 +68,33 @@ def update(review_uid, phone_id):
     args = [user_uid, one_week_ago_timestamp]
     reviews = session.execute(statement, args)
 
-    user_business_review_count = 0
 
-    '''for review in reviews:
+    usr = user.get_user_by_uid(user_uid)
+
+    if usr.unsuspendAt > now():
+        statement = session.prepare('UPDATE reviews set status = ? where uid = ?')
+        args = [statuses_key['REJECTED'], review_uid]
+        session.execute(statement, args)
+        notification.send_user_notification_review_rejected(
+            user_uid=user_uid,
+            business_uid=current_review.get('business_uid'),
+            reason = config.get('REJECTED_USER_SUSPENDED')
+        )
+        return
+
+    if usr.uid == current_review.get('user_uid'):
+        statement = session.prepare('UPDATE reviews set status = ? where uid = ?')
+        args = [statuses_key['REJECTED'], review_uid]
+        session.execute(statement, args)
+        notification.send_user_notification_review_rejected(
+            user_uid=user_uid,
+            business_uid=current_review.get('business_uid'),
+            reason = config.get('REJECTED_USER_OWNED_STORE')
+        )
+        return
+    '''user_business_review_count = 0
+
+    for review in reviews:
         if review.get('business_uid') == current_review.get('business_uid'):
             if user_business_review_count >= 1:
                 statement = session.prepare('UPDATE reviews set status = ? where uid = ?')
@@ -90,8 +114,6 @@ def update(review_uid, phone_id):
     args = [current_review.get('business_uid'), one_week_ago_timestamp]
     reviews = session.execute(statement, args)
 
-    
-
     for review in reviews:
         if review.get('phone_uid') == phone_id:
             statement = session.prepare('UPDATE reviews set status = ? where uid = ?')
@@ -106,6 +128,7 @@ def update(review_uid, phone_id):
 
     
     # Review is valid, update the phone_id
+
     query = None
 
     query = f"UPDATE reviews set status = {statuses_key['ACCEPTED']}, status_updated_at = {now()} where uid = \'{current_review.get('uid')}\'"
@@ -116,6 +139,10 @@ def update(review_uid, phone_id):
     statement = session.prepare(query)
     session.execute(statement)
 
+    business.update_business_score(
+        current_review.get('score'),
+        current_review.get('business_uid')
+    )
     
     notification.send_notification_review_accepted(
         user_uid = user_uid,
@@ -127,7 +154,7 @@ def get_business_reviews(business_uid, created_at):
     if created_at is None:
         statement = f'SELECT * FROM business_reviews where business_uid = \'{business_uid}\' ORDER BY created_at LIMIT 10'
     else:
-        statement = f'SELECT * FROM business_reviews where business_uid = \'{business_uid}\' AND created_at > {created_at} ORDER BY created_at LIMIT 10'
+        statement = f'SELECT * FROM business_reviews where business_uid = \'{business_uid}\' AND created_at > {created_at} ORDER BY created_at LIMIT 100'
     
     review_uids = []
 
@@ -150,7 +177,6 @@ def get_business_reviews(business_uid, created_at):
         except Exception as e:
             print(e)
             pass
-    print(reviews)
     return ResponseModel(
             'Success',
             http.HTTPStatus.OK,

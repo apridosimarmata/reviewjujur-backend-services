@@ -1,4 +1,4 @@
-import uuid
+import uuid, ast
 from cassandra.cluster import Cluster
 from cassandra.query import dict_factory
 from src import review_pb2_grpc, review_pb2
@@ -57,7 +57,7 @@ def number_string_extract_probabilities(column_name, phone_fingerprints, event_t
         
         # Returning probability of changed value
         return changed_event/phone_events
-import ast
+
 def enumerate_probability(column_name, phone_fingerprints, value):
     if column_name == 'location_providers':
         values = value.split(",")
@@ -96,7 +96,7 @@ def save_new_fingerprint(unknown_fingerprint):
         unknown_fingerprint.input_methods,
         str(unknown_fingerprint.is_password_shown),
         unknown_fingerprint.kernel_name,
-        unknown_fingerprint.location_providers,
+        unknown_fingerprint.location_providers.split(","),
         new_phone_id,
         unknown_fingerprint.ringtone,
         str(unknown_fingerprint.screen_timeout),
@@ -121,7 +121,7 @@ def save_new_fingerprint_of_known_device(phone_id, fingerprint):
         fingerprint.input_methods,
         str(fingerprint.is_password_shown),
         fingerprint.kernel_name,
-        fingerprint.location_providers,
+        fingerprint.location_providers.split(","),
         phone_id,
         fingerprint.ringtone,
         str(fingerprint.screen_timeout),

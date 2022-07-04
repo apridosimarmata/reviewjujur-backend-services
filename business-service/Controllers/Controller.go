@@ -12,6 +12,7 @@ import (
 )
 
 func SearchBusiness(c *gin.Context) {
+	var message string
 	pagination := Models.NewBusinessPagination()
 
 	if c.Query("page") != "" {
@@ -22,61 +23,58 @@ func SearchBusiness(c *gin.Context) {
 		pagination.Limit, _ = strconv.Atoi(c.Query("limit"))
 	}
 
-	if c.Query("businessName") != "" {
-		pagination.BusinessName = c.Query("businessName")
-	}
-
-	if c.Query("businessAddress") != "" {
-		pagination.BusinessAddress = c.Query("businessAddress")
+	if c.Query("query") != "" {
+		pagination.Query = c.Query("query")
 	}
 
 	if c.Query("locationUid") != "" {
 		pagination.LocationUid = c.Query("locationUid")
+		// Get location name
+
+		locationUid, err := uuidSatori.FromString(pagination.LocationUid)
+
+		if err != nil {
+			message = err.Error()
+			Utils.MakeResponse(c, http.StatusBadRequest, &message, nil)
+			return
+		}
+
+		var location Models.Location
+
+		err = Models.GetLocationsByUid(&location, uuid.UUID(locationUid))
+
+		if err != nil {
+			message = err.Error()
+			Utils.MakeResponse(c, http.StatusNotFound, &message, nil)
+			return
+		}
+
+		pagination.Location = location.Name
+
+		// Get province name
+
+		var province Models.Province
+
+		err = Models.GetProvinceByUid(&province, location.ProvinceUid)
+
+		if err != nil {
+			message = err.Error()
+			Utils.MakeResponse(c, http.StatusNotFound, &message, nil)
+			return
+		}
+
+		pagination.Province = province.Name
 	}
 
 	if c.Query("sort") != "" {
 		pagination.Sort = c.Query("sort")
+	} else {
+		pagination.Sort = "total_score"
 	}
-
-	message := ""
-
-	// Get location name
-
-	locationUid, err := uuidSatori.FromString(pagination.LocationUid)
-
-	if err != nil {
-		message = err.Error()
-		Utils.MakeResponse(c, http.StatusBadRequest, &message, nil)
-		return
-	}
-
-	var location Models.Location
-
-	err = Models.GetLocationsByUid(&location, uuid.UUID(locationUid))
-
-	if err != nil {
-		message = err.Error()
-		Utils.MakeResponse(c, http.StatusNotFound, &message, nil)
-		return
-	}
-
-	pagination.Location = location.Name
-
-	// Get province name
-
-	var province Models.Province
-
-	err = Models.GetProvinceByUid(&province, location.ProvinceUid)
-
-	if err != nil {
-		message = err.Error()
-		Utils.MakeResponse(c, http.StatusNotFound, &message, nil)
-		return
-	}
-
-	pagination.Province = province.Name
 
 	result, _ := Models.PaginateBusiness(pagination)
+
+	message = "Success"
 
 	Utils.MakeResponse(c, 200, &message, result)
 }

@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "src/grpc/fingerprint.proto";
+
+message ScoreUpdateRequest {
+    int32 score = 1;
+    string business_uid = 2;
+}
+
+service BusinessService {
+    rpc UpdateBusinessScore(ScoreUpdateRequest) returns (Empty) {};
+}

@@ -19,7 +19,7 @@ for value in phone_ids:
 
 phone_fingerprints = {}
 
-def predict(unknown_fingerprint):#,expected_id):
+def predict(unknown_fingerprint): #,expected_id):
     to_compare = {}
 
     remove = "."
@@ -128,11 +128,13 @@ def predict(unknown_fingerprint):#,expected_id):
 
         sum += similarity
 
-        if max_similarity < similarity and similarity >= 0.0:
+        if max_similarity < similarity and similarity >= 0.2:
             print(f'{probabilities} {similarity} -> {phone} {phone_fingerprints[phone][0].get("kernel_name")}')
             max_similarity = similarity
             phone_identified = phone
     
+    print(f'{similarity} -> {phone} {phone_fingerprints[phone][0].get("kernel_name")}')
+
     # If it's a new device
     if phone_identified is None:
         print("New device, saving fingerprint")
@@ -144,7 +146,7 @@ def predict(unknown_fingerprint):#,expected_id):
         print("Known device, new fingerprint. Saving ...")
         save_new_fingerprint_of_known_device(phone_identified, unknown_fingerprint)
 
-    #print(f"Sending callback to the REVIEW-SERVICE {phone_identified}")
+    print(f"Sending callback to the REVIEW-SERVICE {phone_identified}")
 
     send_fingerprint_callback(
         review_uid = unknown_fingerprint.review_uid,

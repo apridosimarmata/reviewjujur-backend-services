@@ -23,7 +23,9 @@ func main() {
 	defer Configs.DB.Close()
 	Configs.DB.AutoMigrate(
 		&Models.User{},
+		&Models.Administrator{},
 	)
+	Configs.DB.LogMode(true)
 
 	s := server.Server{}
 

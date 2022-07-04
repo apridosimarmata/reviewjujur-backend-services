@@ -24,7 +24,6 @@ type DBConfig struct {
 }
 
 func goDotEnvVariable(key string) string {
-
 	filePath, _ := filepath.Abs(".env")
 	err := godotenv.Load(filePath)
 

@@ -28,10 +28,18 @@ func Register(c *gin.Context) {
 	user := Models.User{UserRequest: userRequest}
 	user.Uuid = uuid.New()
 	user.CreatedAt = Utils.Now()
+	user.Password, err = Utils.HashPassword(userRequest.Password)
+
+	if err != nil {
+		message = err.Error()
+		Utils.MakeResponse(c, http.StatusBadRequest, &message, nil)
+		return
+	}
 
 	nowUnix := user.CreatedAt.Unix()
 
 	user.CodeRequestedAt = &nowUnix
+	user.UnsuspendAt = &nowUnix
 
 	err = Models.Create(&user)
 
@@ -113,13 +121,31 @@ func VerifyVerificationCode(c *gin.Context) {
 		return
 	}
 
-	message = "Accepted"
-
 	var userResponse Models.UserResponse
 	userResponse.Uuid = user.Uuid.String()
 	userResponse.Email = user.Email
 	userResponse.WhatsappNo = user.WhatsappNo
 	userResponse.Name = user.Name
+	userResponse.VerifiedAt = user.VerifiedAt
+
+	if c.Query("whatsAppVerification") != "" {
+
+		if user.VerifiedAt != nil {
+			message = "Already verified"
+			Utils.MakeResponse(c, http.StatusOK, &message, userResponse)
+			return
+		}
+
+		now := Utils.Now()
+		user.VerifiedAt = &now
+		err = Models.Update(&user)
+
+		message = "Verified"
+	}
+
+	message = "Accepted"
+
+	userResponse.VerifiedAt = user.VerifiedAt
 
 	Utils.MakeResponse(c, http.StatusOK, &message, userResponse)
 }
@@ -145,7 +171,7 @@ func VerifyPassword(c *gin.Context) {
 		return
 	}
 
-	if user.Password != verifyPasswordRequest.Password {
+	if !Utils.CheckPasswordHash(verifyPasswordRequest.Password, user.Password) {
 		message = "Wrong password"
 		Utils.MakeResponse(c, http.StatusUnauthorized, &message, nil)
 		return
@@ -157,6 +183,7 @@ func VerifyPassword(c *gin.Context) {
 	userResponse.Email = user.Email
 	userResponse.WhatsappNo = user.WhatsappNo
 	userResponse.Name = user.Name
+	userResponse.VerifiedAt = user.VerifiedAt
 
 	Utils.MakeResponse(c, http.StatusOK, nil, userResponse)
 }
@@ -213,13 +240,13 @@ func UpdatePassword(c *gin.Context) {
 		return
 	}
 
-	if userChangePasswordRequest.Password != user.Password {
-		message = "Wrong password"
-		Utils.MakeResponse(c, http.StatusUnauthorized, &message, nil)
+	user.Password, err = Utils.HashPassword(userChangePasswordRequest.NewPassword)
+
+	if err != nil {
+		message = err.Error()
+		Utils.MakeResponse(c, http.StatusBadRequest, &message, nil)
 		return
 	}
-
-	user.Password = userChangePasswordRequest.NewPassword
 
 	err = Models.Update(&user)
 

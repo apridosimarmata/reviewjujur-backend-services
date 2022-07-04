@@ -1,6 +1,7 @@
 package Models
 
 import (
+	"fmt"
 	"math"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -37,6 +38,11 @@ func GetBusinessByOwnerUid(business *Business, ownerUid uuid.UUID) (err error) {
 	return nil
 }
 
+func Update(business *Business) (err error) {
+	Configs.DB.Save(business)
+	return nil
+}
+
 func PaginateBusiness(businessPagination BusinessPagination) (any BusinessPagination, err error) {
 	var res []*Business
 	Configs.DB.Scopes(paginate(&res, &businessPagination, Configs.DB)).Find(&res)
@@ -46,12 +52,26 @@ func PaginateBusiness(businessPagination BusinessPagination) (any BusinessPagina
 
 func paginate(value interface{}, businessPagination *BusinessPagination, db *gorm.DB) func(db *gorm.DB) *gorm.DB {
 	var totalRows int64
-	db.Model(value).Count(&totalRows)
+
+	query := db.Model(value).Where("name like ? OR address like ?", "%"+businessPagination.Query+"%", "%"+businessPagination.Query+"%")
+
+	if businessPagination.LocationUid != "" {
+		query.Where("location_uid = ?", businessPagination.LocationUid).Count(&totalRows)
+	} else {
+		query.Count(&totalRows)
+	}
 
 	businessPagination.TotalRows = totalRows
 	businessPagination.TotalPages = int(math.Ceil(float64(totalRows) / float64(businessPagination.Limit)))
 
 	return func(db *gorm.DB) *gorm.DB {
-		return db.Offset(businessPagination.GetOffset()).Limit(businessPagination.GetLimit()).Order(businessPagination.GetSort()).Where("name like ?", "%"+businessPagination.BusinessName+"%").Where("address like ?", "%"+businessPagination.BusinessAddress+"%").Where("location_uid = ?", businessPagination.LocationUid)
+		fmt.Println("page ", businessPagination.GetOffset())
+		query := db.Model(value).Offset(businessPagination.GetOffset()).Limit(businessPagination.GetLimit()).Order(businessPagination.GetSort()).Where("name like ? OR address like ?", "%"+businessPagination.Query+"%", "%"+businessPagination.Query+"%")
+
+		if businessPagination.LocationUid != "" {
+			query = query.Where("location_uid = ?", businessPagination.LocationUid)
+		}
+
+		return query
 	}
 }

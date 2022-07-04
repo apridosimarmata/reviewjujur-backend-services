@@ -11,3 +11,7 @@ func Now() time.Time {
 	now = time.Now().In(locale)
 	return now
 }
+
+func OneDayLater() time.Time {
+	return Now().AddDate(0, 0, 1)
+}

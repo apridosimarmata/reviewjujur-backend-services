@@ -1,8 +1,7 @@
-from .models import AuthenticationResponse
 from utils.constants import EXPIRED_TOKEN, SIGNATURE_ERROR
 from http import HTTPStatus
 from utils.request import make_response
-from .models import AuthenticationResponse
+from .models import AuthenticationResponse, AdministratorAuthenticationResponse
 
 def authorize(request):
     user = AuthenticationResponse.extract_user(request.headers.get('Access-Token'))
@@ -12,6 +11,17 @@ def authorize(request):
         return make_response(HTTPStatus.NOT_ACCEPTABLE, 'Not Acceptable', None)
     elif isinstance(user, dict):
         return make_response(HTTPStatus.OK, None, user)
+    else:
+        return make_response(HTTPStatus.INTERNAL_SERVER_ERROR, 'Server: Unknown Error', None)
+
+def authorize_admin(request):
+    admin = AdministratorAuthenticationResponse.extract_user(request.headers.get('Access-Token'))
+    if admin == EXPIRED_TOKEN:
+        return make_response(HTTPStatus.GONE, 'Access Expired', None)
+    elif admin == SIGNATURE_ERROR:
+        return make_response(HTTPStatus.NOT_ACCEPTABLE, 'Not Acceptable', None)
+    elif isinstance(admin, dict):
+        return make_response(HTTPStatus.OK, None, admin)
     else:
         return make_response(HTTPStatus.INTERNAL_SERVER_ERROR, 'Server: Unknown Error', None)
 

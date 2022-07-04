@@ -23,7 +23,6 @@ console.log(client)
 
 module.exports = {
     async getUserByUid(userUid, callback){
-
         user = await client.GetUserByUid(
             {uid : userUid},
             (error, user) => {

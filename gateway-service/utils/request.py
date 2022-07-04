@@ -9,6 +9,13 @@ def post_data(url, data):
     except Exception as e:
         return make_response(http.HTTPStatus.INTERNAL_SERVER_ERROR, extract_exception_message(e), None)
 
+def patch_data(url, data):
+    try:
+        with requests.patch(url, json = data) as result:
+            return result.content, result.status_code, JSON_CONTENT
+    except Exception as e:
+        return make_response(http.HTTPStatus.INTERNAL_SERVER_ERROR, extract_exception_message(e), None)
+
 def get_data(url):
     try:
         with requests.get(url) as result:
